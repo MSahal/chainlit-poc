@@ -1,3 +1,4 @@
+# app.py
 import chainlit as cl
 from openai import AsyncOpenAI
 from pymongo import MongoClient
@@ -5,21 +6,19 @@ from datetime import datetime
 import os
 import uuid
 
-client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Configurations
+openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 # Connexion à MongoDB
 mongo_uri = os.getenv("MONGO_URI")
-client = MongoClient(mongo_uri)
-db = client["chainlit"]
+mongo_client = MongoClient(mongo_uri)
+db = mongo_client["chainlit"]
 messages_collection = db["messages"]
-
-# Stockage des sessions en mémoire
-user_sessions = {}
 
 @cl.on_chat_start
 async def start():
-
     session_id = str(uuid.uuid4())
-    await cl.user_session.set("session_id", session_id)
+    cl.user_session.set("session_id", session_id)
 
     # Splash screen initial
     await cl.Message(
@@ -28,7 +27,7 @@ async def start():
 # 🌊 Bienvenue chez Filhet-Allard Maritime
 
 Chargement de votre assistant dédié à l'assurance maritime...
-"""
+""",
     ).send()
 
     # Récupérer l'historique pour la session actuelle
@@ -38,7 +37,7 @@ Chargement de votre assistant dédié à l'assurance maritime...
         await cl.Message(author="Utilisateur", content=msg["user_message"]).send()
         await cl.Message(author="Filhet-Allard Maritime", content=msg["bot_response"]).send()
 
-    # Message de bienvenue
+    # Message de bienvenue après l'historique
     await cl.Message(
         author="Filhet-Allard Maritime",
         content="""
@@ -56,7 +55,7 @@ Posez-moi vos questions sur nos services : navires, fret, ports, responsabilité
         ]
     ).send()
 
-    # FAQ automatique au démarrage
+    # FAQ automatique
     faq_message = """
 ## Questions Fréquentes 🌟
 
@@ -72,7 +71,7 @@ N'hésitez pas à poser votre question !
 
 @cl.on_message
 async def respond(message: cl.Message):
-    session_id = await cl.user_session.get("session_id")
+    session_id = cl.user_session.get("session_id")
 
     response = await openai_client.chat.completions.create(
         model="gpt-4",
