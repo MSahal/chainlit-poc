@@ -32,5 +32,3 @@ def respond(message: cl.Message):
     )
     response = completion.choices[0].message.content
     cl.Message(content=response).send()
-
-cl.run(css_path="custom.css")
