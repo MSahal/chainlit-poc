@@ -1,8 +1,15 @@
 import chainlit as cl
 from openai import AsyncOpenAI
+from pymongo import MongoClient
+from datetime import datetime
 import os
 
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Connexion à MongoDB
+mongo_uri = os.getenv("MONGO_URI")
+client = MongoClient(mongo_uri)
+db = client["chainlit"]
+messages_collection = db["messages"]
 
 @cl.on_chat_start
 async def start():
@@ -16,6 +23,15 @@ Chargement de votre assistant dédié à l'assurance maritime...
 """
     ).send()
 
+    # Récupérer l'historique depuis MongoDB
+    previous_messages = messages_collection.find().sort("timestamp", 1)
+
+    # Rejouer les anciens échanges
+    for msg in previous_messages:
+        await cl.Message(author="Utilisateur", content=msg["user_message"]).send()
+        await cl.Message(author="Filhet-Allard Maritime", content=msg["bot_response"]).send()
+
+        
     # Message de bienvenue
     await cl.Message(
         author="Filhet-Allard Maritime",
@@ -57,4 +73,12 @@ async def respond(message: cl.Message):
             {"role": "user", "content": message.content}
         ]
     )
-    await cl.Message(content=response.choices[0].message.content).send()
+
+    bot_response=response.choices[0].message.content
+    await cl.Message(content=bot_response).send()
+    # Sauvegarder l'échange dans MongoDB
+    messages_collection.insert_one({
+        "user_message": message.content,
+        "bot_response": bot_response,
+        "timestamp": datetime.utcnow()
+    })
