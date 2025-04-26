@@ -4,7 +4,7 @@ import openai
 import os
 
 # Configure ton API Key OpenAI
-openai.api_key = "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"
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @cl.on_chat_start
 def start():
