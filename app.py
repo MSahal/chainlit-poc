@@ -19,7 +19,7 @@ user_sessions = {}
 async def start():
 
     session_id = str(uuid.uuid4())
-    user_sessions[cl.user_session.id] = session_id
+    await cl.user_session.set("session_id", session_id)
 
     # Splash screen initial
     await cl.Message(
@@ -72,7 +72,7 @@ N'hésitez pas à poser votre question !
 
 @cl.on_message
 async def respond(message: cl.Message):
-    session_id = user_sessions.get(cl.user_session.id)
+    session_id = await cl.user_session.get("session_id")
 
     response = await openai_client.chat.completions.create(
         model="gpt-4",
