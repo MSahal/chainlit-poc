@@ -18,37 +18,28 @@ messages_collection = db["messages"]
 @cl.on_chat_start
 async def start():
     session_id = cl.user_session.get("session_id")
-
     if not session_id:
         session_id = str(uuid.uuid4())
         cl.user_session.set("session_id", session_id)
 
-    # Splash screen initial
     await cl.Message(
         author="Filhet-Allard Maritime",
-        content="""
-# 🌊 Bienvenue chez Filhet-Allard Maritime
+        content="""# 🌊 Bienvenue chez Filhet-Allard Maritime
 
-Chargement de votre assistant dédié à l'assurance maritime...
-""",
+Chargement de votre assistant dédié à l'assurance maritime...""",
     ).send()
 
-    # Récupérer l'historique existant
     previous_messages = messages_collection.find({"session_id": session_id}).sort("timestamp", 1)
-
     for msg in previous_messages:
         await cl.Message(author="Utilisateur", content=msg["user_message"]).send()
         await cl.Message(author="Filhet-Allard Maritime", content=msg["bot_response"]).send()
 
-    # Message de bienvenue après l'historique
     await cl.Message(
         author="Filhet-Allard Maritime",
-        content="""
-# 👋 Bonjour !
+        content="""# 👋 Bonjour !
 
 Je suis votre assistant virtuel dédié à l'assurance maritime.
-Posez-moi vos questions sur nos services : navires, fret, ports, responsabilité civile maritime...
-""",
+Posez-moi vos questions sur nos services : navires, fret, ports, responsabilité civile maritime...""",
         actions=[
             cl.Action(
                 name="contact",
@@ -58,9 +49,7 @@ Posez-moi vos questions sur nos services : navires, fret, ports, responsabilité
         ]
     ).send()
 
-    # FAQ automatique
-    faq_message = """
-## Questions Fréquentes 🌟
+    faq_message = """## Questions Fréquentes 🌟
 
 - Quels types d'assurances proposez-vous pour les navires ?
 - Couvrez-vous les risques liés au transport de marchandises ?
@@ -75,7 +64,6 @@ N'hésitez pas à poser votre question !
 @cl.on_message
 async def respond(message: cl.Message):
     session_id = cl.user_session.get("session_id")
-
     response = await openai_client.chat.completions.create(
         model="gpt-4",
         messages=[
@@ -83,12 +71,8 @@ async def respond(message: cl.Message):
             {"role": "user", "content": message.content}
         ]
     )
-
     bot_response = response.choices[0].message.content
-
     await cl.Message(content=bot_response).send()
-
-    # Sauvegarder l'échange avec session_id
     messages_collection.insert_one({
         "session_id": session_id,
         "user_message": message.content,
