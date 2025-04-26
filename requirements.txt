@@ -1,5 +1,5 @@
-
 chainlit
 openai
-python-dotenv
 pymongo
+python-dotenv
+flask
