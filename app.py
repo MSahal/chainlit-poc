@@ -17,8 +17,11 @@ messages_collection = db["messages"]
 
 @cl.on_chat_start
 async def start():
-    session_id = str(uuid.uuid4())
-    cl.user_session.set("session_id", session_id)
+    session_id = cl.user_session.get("session_id")
+
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        cl.user_session.set("session_id", session_id)
 
     # Splash screen initial
     await cl.Message(
@@ -30,7 +33,7 @@ Chargement de votre assistant dédié à l'assurance maritime...
 """,
     ).send()
 
-    # Récupérer l'historique pour la session actuelle
+    # Récupérer l'historique existant
     previous_messages = messages_collection.find({"session_id": session_id}).sort("timestamp", 1)
 
     for msg in previous_messages:
