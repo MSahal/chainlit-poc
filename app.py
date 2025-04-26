@@ -17,7 +17,7 @@ Je suis votre assistant virtuel dédié à l'assurance maritime.
 Posez-moi vos questions sur nos services : navires, fret, ports, responsabilité civile maritime...
 """,
         actions=[
-            cl.Action(name="contact", label="📞 Contactez-nous", payload={"https://www.fa-maritime.com/en/contact/")}
+            cl.Action(name="contact", label="📞 Contactez-nous", payload={"https://www.fa-maritime.com/en/contact/"})
         ]
     ).send()
 
